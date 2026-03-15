@@ -1,0 +1,21 @@
+[package]
+name = "hdiff"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "hdiff"
+path = "src/main.rs"
+
+[features]
+net_tests = ["dep:ureq"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+scraper = "0.22"
+similar = { version = "2", features = ["unicode"] }
+console = "0.15"
+ureq = { version = "2", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
