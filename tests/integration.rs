@@ -25,7 +25,10 @@ fn binary() -> std::path::PathBuf {
 }
 
 fn hdiff(args: &[&str]) -> std::process::Output {
-    Command::new(binary()).args(args).output().expect("hdiff binary not found — run `cargo build` first")
+    Command::new(binary())
+        .args(args)
+        .output()
+        .expect("hdiff binary not found — run `cargo build` first")
 }
 
 struct Fixture {
@@ -34,7 +37,9 @@ struct Fixture {
 
 impl Fixture {
     fn new() -> Self {
-        Self { dir: TempDir::new().unwrap() }
+        Self {
+            dir: TempDir::new().unwrap(),
+        }
     }
 
     fn write(&self, name: &str, content: &str) -> std::path::PathBuf {
@@ -99,8 +104,14 @@ fn context_lines_flag() {
     let out = hdiff(&["--no-color", "-U", "0", path_str(&a), path_str(&b)]);
     let stdout = String::from_utf8_lossy(&out.stdout);
     // With 0 context lines the unchanged lines 4 and 6 must NOT appear
-    assert!(!stdout.contains(" 4\n"), "unexpected context line 4:\n{stdout}");
-    assert!(!stdout.contains(" 6\n"), "unexpected context line 6:\n{stdout}");
+    assert!(
+        !stdout.contains(" 4\n"),
+        "unexpected context line 4:\n{stdout}"
+    );
+    assert!(
+        !stdout.contains(" 6\n"),
+        "unexpected context line 6:\n{stdout}"
+    );
     assert!(stdout.contains("-5"), "expected -5 in:\n{stdout}");
     assert!(stdout.contains("+X"), "expected +X in:\n{stdout}");
 }
@@ -148,9 +159,15 @@ fn html_style_change_invisible_to_hdiff() {
     assert_eq!(out.status.code(), Some(1));
     let stdout = String::from_utf8_lossy(&out.stdout);
     // CSS content must NOT appear in the diff
-    assert!(!stdout.contains("font-size"), "CSS leaked into diff:\n{stdout}");
+    assert!(
+        !stdout.contains("font-size"),
+        "CSS leaked into diff:\n{stdout}"
+    );
     // The textual change must appear
-    assert!(stdout.contains("one") || stdout.contains("TWO"), "expected content change:\n{stdout}");
+    assert!(
+        stdout.contains("one") || stdout.contains("TWO"),
+        "expected content change:\n{stdout}"
+    );
 }
 
 #[test]
@@ -195,7 +212,10 @@ fn html_vs_plaintext_different_content() {
     let out = hdiff(&["--no-color", path_str(&html), path_str(&txt)]);
     assert_eq!(out.status.code(), Some(1));
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("-Rust") || stdout.contains("+Python"), "{stdout}");
+    assert!(
+        stdout.contains("-Rust") || stdout.contains("+Python"),
+        "{stdout}"
+    );
 }
 
 // ── force flags ───────────────────────────────────────────────────────────────
@@ -215,16 +235,17 @@ fn force_text_ignores_html_tags() {
 
     // With --text both files treated as raw text → raw HTML != "Hello" → exit 1
     let out_forced = hdiff(&["--no-color", "--text", path_str(&html), path_str(&txt)]);
-    assert_eq!(out_forced.status.code(), Some(1), "--text should see raw tags");
+    assert_eq!(
+        out_forced.status.code(),
+        Some(1),
+        "--text should see raw tags"
+    );
 }
 
 // ── multi-line / realistic HTML documents ─────────────────────────────────────
 
 fn make_article(title: &str, paras: &[&str]) -> String {
-    let body: String = paras
-        .iter()
-        .map(|p| format!("  <p>{p}</p>\n"))
-        .collect();
+    let body: String = paras.iter().map(|p| format!("  <p>{p}</p>\n")).collect();
     format!(
         "<!DOCTYPE html>\n<html><head><title>{title}</title></head>\n<body>\n<h1>{title}</h1>\n{body}</body></html>\n",
     )
@@ -240,7 +261,7 @@ fn realistic_article_diff() {
     let paras_v2 = [
         "The quick brown fox jumps over the lazy dog.",
         "Pack my box with five dozen liquor jugs.",
-        "How vexingly quick daft zebras LEAP.",  // changed last word
+        "How vexingly quick daft zebras LEAP.", // changed last word
     ];
     let f = Fixture::new();
     let a = f.write("v1.html", &make_article("Pangrams", &paras_v1));
@@ -248,7 +269,10 @@ fn realistic_article_diff() {
     let out = hdiff(&["--no-color", path_str(&a), path_str(&b)]);
     assert_eq!(out.status.code(), Some(1));
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("jump.") || stdout.contains("LEAP"), "{stdout}");
+    assert!(
+        stdout.contains("jump.") || stdout.contains("LEAP"),
+        "{stdout}"
+    );
 }
 
 #[test]
@@ -269,7 +293,10 @@ fn list_items_extracted() {
     let out = hdiff(&["--no-color", path_str(&a), path_str(&b)]);
     assert_eq!(out.status.code(), Some(1));
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("-Banana") || stdout.contains("+Blueberry"), "{stdout}");
+    assert!(
+        stdout.contains("-Banana") || stdout.contains("+Blueberry"),
+        "{stdout}"
+    );
 }
 
 // ── error handling ────────────────────────────────────────────────────────────
@@ -290,7 +317,10 @@ fn net_wikipedia_rust_page_html_vs_text() {
 
     // Download the Rust (programming language) Wikipedia article as HTML
     let url = "https://en.wikipedia.org/wiki/Rust_(programming_language)";
-    let mut resp = ureq::get(url).call().expect("network request failed").into_reader();
+    let mut resp = ureq::get(url)
+        .call()
+        .expect("network request failed")
+        .into_reader();
     let mut html_bytes = Vec::new();
     resp.read_to_end(&mut html_bytes).unwrap();
     let html = String::from_utf8_lossy(&html_bytes).into_owned();
@@ -306,9 +336,13 @@ fn net_wikipedia_rust_page_html_vs_text() {
     let out = hdiff(&[
         "--no-color",
         path_str(&html_file),
-        "--html-b",   // force HTML detection off for .txt
+        "--html-b", // force HTML detection off for .txt
         path_str(&txt_file),
     ]);
     // They should be identical since we extracted and re-saved the same content
-    assert_eq!(out.status.code(), Some(0), "HTML and re-saved text should match");
+    assert_eq!(
+        out.status.code(),
+        Some(0),
+        "HTML and re-saved text should match"
+    );
 }
