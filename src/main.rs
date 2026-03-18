@@ -52,8 +52,8 @@ struct Cli {
 }
 
 fn read_as_text(path: &PathBuf, force_html: bool, force_text: bool) -> Result<String, String> {
-    let raw = fs::read_to_string(path)
-        .map_err(|e| format!("cannot read {}: {}", path.display(), e))?;
+    let raw =
+        fs::read_to_string(path).map_err(|e| format!("cannot read {}: {}", path.display(), e))?;
 
     let is_html = if force_text {
         false

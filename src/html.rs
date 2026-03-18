@@ -7,10 +7,35 @@ const SKIP_TAGS: &[&str] = &[
 
 /// Tags that introduce a block break in the output text
 const BLOCK_TAGS: &[&str] = &[
-    "p", "div", "section", "article", "main", "header", "footer", "aside",
-    "nav", "h1", "h2", "h3", "h4", "h5", "h6", "li", "dt", "dd",
-    "blockquote", "pre", "figcaption", "figure", "table", "tr", "td", "th",
-    "caption", "br", "hr",
+    "p",
+    "div",
+    "section",
+    "article",
+    "main",
+    "header",
+    "footer",
+    "aside",
+    "nav",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "li",
+    "dt",
+    "dd",
+    "blockquote",
+    "pre",
+    "figcaption",
+    "figure",
+    "table",
+    "tr",
+    "td",
+    "th",
+    "caption",
+    "br",
+    "hr",
 ];
 
 /// Extract human-readable plaintext from an HTML string.
@@ -52,10 +77,7 @@ fn walk(node: scraper::ElementRef, out: &mut String) {
                 let t = text.trim();
                 if !t.is_empty() {
                     // collapse internal whitespace
-                    let collapsed: String = t
-                        .split_whitespace()
-                        .collect::<Vec<_>>()
-                        .join(" ");
+                    let collapsed: String = t.split_whitespace().collect::<Vec<_>>().join(" ");
                     out.push_str(&collapsed);
                     out.push(' ');
                 }
